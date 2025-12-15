@@ -57,7 +57,170 @@ document.addEventListener('DOMContentLoaded', function(){
   generateAsciiPattern();
   initAsciiTrail();
   initInteractiveTerminal();
+  initBitmapConverter();
+  initProjectsPage();
 });
+
+function initProjectsPage(){
+  var app = document.getElementById('projectsApp');
+  if(!app) return;
+
+  var listView = document.getElementById('projectsListView');
+  var detailView = document.getElementById('projectsDetailView');
+  var backBtn = document.getElementById('projectBackBtn');
+
+  var titleEl = document.getElementById('projectTitle');
+  var leadEl = document.getElementById('projectLead');
+  var codeEl = document.getElementById('projectCode');
+  var mediaEl = document.getElementById('projectMedia');
+  var roadmapEl = document.getElementById('projectRoadmap');
+  var blogEl = document.getElementById('projectBlog');
+  var primaryLink = document.getElementById('projectPrimaryLink');
+
+  if(!listView || !detailView || !backBtn || !titleEl || !leadEl || !codeEl || !roadmapEl || !blogEl) return;
+
+  var projects = {
+    'bitmap-converter': {
+      title: 'Bitmap Converter',
+      lead: 'Drag & drop upload, selectable algorithm, adjustable pixel size and threshold, plus PNG export.',
+      images: [
+        {src: 'img/img.png', alt: 'Bitmap Converter preview image'},
+        {src: 'img/img.png', alt: 'Bitmap Converter preview image (2)'}
+      ],
+      code: "// Example: apply dithering to ImageData\nconst algo = 'floyd';\nconst threshold = 128;\nconst outData = window.DitherEngine.apply(imgData, algo, { threshold });",
+      roadmap: ['Add palette options (2–4 colors)', 'Batch export (ZIP)', 'Presets for common styles'],
+      blog: ['Why dithering still looks great in 2025', 'Picking the right algorithm for line art vs photos'],
+      primaryLink: { href: 'bitmap.html', label: 'Open tool' }
+    },
+    'portfolio-terminal': {
+      title: 'Portfolio Terminal',
+      lead: 'A minimal terminal UI that outputs “commands” as animated lines.',
+      images: [
+        {src: 'img/img.png', alt: 'Portfolio preview image'},
+        {src: 'img/img.png', alt: 'Portfolio preview image (2)'}
+      ],
+      code: "// Example: command output typing\nfunction typeOutput(container, lines, index) {\n  if (index >= lines.length) return;\n  const line = document.createElement('div');\n  line.className = 'output-line';\n  line.textContent = lines[index];\n  container.appendChild(line);\n  setTimeout(() => typeOutput(container, lines, index + 1), 50);\n}",
+      roadmap: ['Add a dedicated projects command (later)', 'Command history + keyboard input', 'More “apps” inside the terminal'],
+      blog: ['Design notes: terminal UI without frameworks', 'Keeping the vibe consistent across pages'],
+      primaryLink: { href: 'index.html', label: 'Open page' }
+    },
+    'dither-engine': {
+      title: 'Dither Engine',
+      lead: 'A lightweight collection of dithering kernels and ordered-matrix patterns.',
+      images: [],
+      code: "// Example: ordered dither (conceptual)\nconst bayer4 = [\n  [ 0,  8,  2, 10],\n  [12,  4, 14,  6],\n  [ 3, 11,  1,  9],\n  [15,  7, 13,  5],\n];",
+      roadmap: ['Better performance for large images', 'Unit tests for kernels', 'Optional Web Worker mode'],
+      blog: ['Error diffusion vs ordered dither: tradeoffs'],
+      primaryLink: null
+    }
+  };
+
+  function setHidden(el, hidden){
+    if(!el) return;
+    if(hidden) el.setAttribute('hidden','');
+    else el.removeAttribute('hidden');
+  }
+
+  function clearList(el){
+    while(el && el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function renderList(listEl, items){
+    clearList(listEl);
+    (items || []).forEach(function(text){
+      var li = document.createElement('li');
+      li.textContent = text;
+      listEl.appendChild(li);
+    });
+  }
+
+  function renderMedia(items){
+    if(!mediaEl) return;
+    clearList(mediaEl);
+    if(!items || !items.length){
+      setHidden(mediaEl, true);
+      return;
+    }
+    items.forEach(function(img){
+      var image = document.createElement('img');
+      image.className = 'project-img';
+      image.src = img.src;
+      image.alt = img.alt || '';
+      mediaEl.appendChild(image);
+    });
+    setHidden(mediaEl, false);
+  }
+
+  function showList(){
+    setHidden(detailView, true);
+    setHidden(listView, false);
+  }
+
+  function showDetail(slug){
+    var project = projects[slug];
+    if(!project){
+      showList();
+      return;
+    }
+
+    titleEl.textContent = project.title;
+    leadEl.textContent = project.lead || '';
+    codeEl.textContent = project.code || '';
+    renderMedia(project.images);
+    renderList(roadmapEl, project.roadmap);
+    renderList(blogEl, project.blog);
+
+    if(primaryLink && project.primaryLink && project.primaryLink.href){
+      primaryLink.href = project.primaryLink.href;
+      primaryLink.textContent = project.primaryLink.label || 'Open';
+      setHidden(primaryLink, false);
+    }else if(primaryLink){
+      setHidden(primaryLink, true);
+    }
+
+    setHidden(listView, true);
+    setHidden(detailView, false);
+  }
+
+  function getSlugFromHash(){
+    var raw = (window.location.hash || '').replace(/^#/, '');
+    return raw;
+  }
+
+  function clearHash(){
+    try{
+      history.pushState('', document.title, window.location.pathname + window.location.search);
+    }catch(err){
+      window.location.hash = '';
+    }
+  }
+
+  // Handle initial render
+  var initial = getSlugFromHash();
+  if(initial) showDetail(initial);
+  else showList();
+
+  // Intercept clicks so it feels like a real app but remains shareable via hash
+  app.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('[data-project-link]') : null;
+    if(!a) return;
+    var slug = a.getAttribute('data-project-link');
+    if(!slug) return;
+    e.preventDefault();
+    window.location.hash = slug;
+  });
+
+  window.addEventListener('hashchange', function(){
+    var slug = getSlugFromHash();
+    if(slug) showDetail(slug);
+    else showList();
+  });
+
+  backBtn.addEventListener('click', function(){
+    clearHash();
+    showList();
+  });
+}
 
 function generateAsciiPattern() {
   var container = document.getElementById('asciiPattern');
@@ -83,6 +246,163 @@ function generateAsciiPattern() {
     
     container.appendChild(dot);
   }
+}
+
+// Bitmap converter UI wiring
+function initBitmapConverter(){
+  var uploadArea = document.getElementById('uploadArea');
+  var imageInput = document.getElementById('imageInput');
+  var srcCanvas = document.getElementById('srcCanvas');
+  var outCanvas = document.getElementById('outCanvas');
+  var statusEl = document.getElementById('bitmapStatus');
+  var algorithmSelect = document.getElementById('algorithmSelect');
+  var scaleInput = document.getElementById('scaleInput');
+  var scaleValue = document.getElementById('scaleValue');
+  var thresholdInput = document.getElementById('thresholdInput');
+  var thresholdValue = document.getElementById('thresholdValue');
+  var resetBtn = document.getElementById('resetBtn');
+  var downloadBtn = document.getElementById('downloadBtn');
+
+  if(!uploadArea || !imageInput || !srcCanvas || !outCanvas){
+    if(statusEl) statusEl.textContent = 'Bitmap UI elements not found on this page.';
+    console.warn('initBitmapConverter: missing elements', {uploadArea, imageInput, srcCanvas, outCanvas});
+    return;
+  }
+  if(statusEl) statusEl.textContent = 'Ready — choose an image.';
+
+  var img = new Image();
+  var originalImage = null;
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', function(e){ e.preventDefault(); uploadArea.classList.add('drag'); });
+  uploadArea.addEventListener('dragleave', function(e){ e.preventDefault(); uploadArea.classList.remove('drag'); });
+  uploadArea.addEventListener('drop', function(e){
+    e.preventDefault(); uploadArea.classList.remove('drag');
+    if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]){
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  imageInput.addEventListener('change', function(e){
+    if(this.files && this.files[0]) handleFile(this.files[0]);
+  });
+
+  function syncSliderLabels(){
+    if(scaleValue && scaleInput) scaleValue.textContent = String(scaleInput.value);
+    if(thresholdValue && thresholdInput) thresholdValue.textContent = String(thresholdInput.value);
+  }
+
+  if(scaleInput) scaleInput.addEventListener('input', syncSliderLabels);
+  if(thresholdInput) thresholdInput.addEventListener('input', syncSliderLabels);
+  syncSliderLabels();
+
+  // Choose file button inside upload area (visible, reliable user gesture)
+  var chooseFileBtn = document.getElementById('chooseFileBtn');
+  if(chooseFileBtn){
+    chooseFileBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      try{ imageInput.click(); }catch(err){ /* ignore */ }
+    });
+  }
+
+  function handleFile(file){
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      img = new Image();
+      img.onload = function(){
+        originalImage = img;
+        drawSourcePreview(img, srcCanvas);
+        // auto-apply with current settings
+        scheduleApply();
+        if(statusEl) statusEl.textContent = 'Loaded: ' + file.name + ' (' + originalImage.width + 'x' + originalImage.height + ')';
+      };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function(err){ if(statusEl) statusEl.textContent = 'File read error'; };
+    reader.readAsDataURL(file);
+  }
+
+  function drawSourcePreview(image, canvas){
+    var maxW = 420;
+    var ratio = Math.min(1, maxW / image.width);
+    canvas.width = Math.round(image.width * ratio);
+    canvas.height = Math.round(image.height * ratio);
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(image, 0,0, canvas.width, canvas.height);
+  }
+
+  function drawOriginalToOut(image){
+    var ctx = outCanvas.getContext('2d');
+    outCanvas.width = Math.min(600, image.width);
+    outCanvas.height = Math.round(image.height * (outCanvas.width / image.width));
+    ctx.imageSmoothingEnabled = true;
+    ctx.clearRect(0,0,outCanvas.width,outCanvas.height);
+    ctx.drawImage(image,0,0,outCanvas.width,outCanvas.height);
+  }
+
+  function applyDither(){
+    if(!originalImage) return;
+    var pixelSize = Math.max(1, parseInt(scaleInput.value) || 1);
+    // create small canvas reduced by pixelSize
+    var smallW = Math.max(1, Math.floor(originalImage.width / pixelSize));
+    var smallH = Math.max(1, Math.floor(originalImage.height / pixelSize));
+    var small = document.createElement('canvas');
+    small.width = smallW; small.height = smallH;
+    var sctx = small.getContext('2d');
+    sctx.imageSmoothingEnabled = false;
+    sctx.clearRect(0,0,smallW,smallH);
+    sctx.drawImage(originalImage, 0,0, smallW, smallH);
+
+    var imgData = sctx.getImageData(0,0,smallW,smallH);
+    var algo = algorithmSelect.value || 'nearest';
+    var threshold = parseInt(thresholdInput.value) || 128;
+    var outData = window.DitherEngine.apply(imgData, algo, {threshold:threshold});
+
+    // draw dithered small to temp canvas then scale up to outCanvas
+    var temp = document.createElement('canvas');
+    temp.width = smallW; temp.height = smallH;
+    var tctx = temp.getContext('2d');
+    tctx.putImageData(outData, 0,0);
+
+    // scale to output canvas
+    var outW = smallW * pixelSize;
+    var outH = smallH * pixelSize;
+    outCanvas.width = outW;
+    outCanvas.height = outH;
+    var octx = outCanvas.getContext('2d');
+    octx.imageSmoothingEnabled = false;
+    octx.clearRect(0,0,outW,outH);
+    octx.drawImage(temp, 0,0, outW, outH);
+  }
+
+  // Debounced auto-apply for slider drags
+  var applyTimer = null;
+  function scheduleApply(){
+    if(!originalImage) return;
+    if(applyTimer) clearTimeout(applyTimer);
+    applyTimer = setTimeout(function(){
+      applyTimer = null;
+      applyDither();
+    }, 40);
+  }
+
+  // Auto-apply when controls change
+  algorithmSelect && algorithmSelect.addEventListener('change', function(){ scheduleApply(); });
+  scaleInput && scaleInput.addEventListener('input', function(){ scheduleApply(); });
+  thresholdInput && thresholdInput.addEventListener('input', function(){ scheduleApply(); });
+
+  resetBtn && resetBtn.addEventListener('click', function(){
+    if(originalImage) drawOriginalToOut(originalImage);
+  });
+  downloadBtn && downloadBtn.addEventListener('click', function(){
+    if(!outCanvas) return;
+    var url = outCanvas.toDataURL('image/png');
+    var a = document.createElement('a');
+    a.href = url; a.download = 'dithered.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
 }
 
 function initAsciiTrail() {
@@ -224,30 +544,18 @@ function initInteractiveTerminal() {
         ''
       ]
     },
-    whoami: {
-      output: [
-        '╔══════════════════════════════════════════════╗',
-        '║  TYPEDEF (Hakkı Onur) -  Software Engineer   ║',
-        '╚══════════════════════════════════════════════╝',
-        '',
-        '→ Passionate about building cool stuff',
-        '→ Love clean code and minimal design',
-        '→ Currently exploring: Artificial Intelligence',
-        '→ Based in: Turkiye, Ankara'
-      ]
-    },
     about: {
       output: [
         '┌─────────────────────────────────────────────┐',
         '│  ABOUT ME                                   │',
         '└─────────────────────────────────────────────┘',
         '',
-        'I\'m a developer who loves turning ideas into',
-        'reality through code. My journey started with',
-        'curiosity and evolved into a passion.',
+        'Hello! I\'m Hakkı Onur Hürmüzlü, 22 years old Software Engineer Student from Turkiye.',
         '',
-        '• Coffee-driven development 🟫',
-        '• Always learning, always building'
+        '',
+        'I love coding and creating projects that make a difference. My interests include web development,',
+        'mobile apps, and diving into the world of AI and machine learning. I enjoy collaborating on open-source',
+        'projects and continuously learning new technologies to enhance my skills.',
       ]
     },
     skills: {
@@ -257,10 +565,17 @@ function initInteractiveTerminal() {
         '└─────────────────────────────────────────────┘',
         '',
         '  Languages:',
-        '  ├── JavaScript',
-        '  ├── C / C++',
         '  ├── Python',
+        '  ├── C / C++',
+        '  ├── JavaScript',
         '  └── Dart',
+        '',
+        '  AI / ML:',
+        '  ├── Computer Vision (OpenCV: ROI overlays, preprocessing pipelines)',
+        '  ├── Deep Learning (TensorFlow/Keras: model training + inference)',
+        '  ├── Object Detection (YOLOv8: dataset prep, training, evaluation)',
+        '  └── Prompt Engineering (LLM prompting for ideation + structured outputs)',
+
         '',
         '  Web Development:',
         '  ├── HTML / CSS',
@@ -269,12 +584,6 @@ function initInteractiveTerminal() {
         '',
         '  Mobile:',
         '  └── Flutter + Firebase',
-        '',
-        '  AI / ML:',
-        '  ├── TensorFlow',
-        '  ├── Keras',
-        '  ├── OpenCV',
-        '  └── Prompt Engineering',
         '',
         '  Backend / Databases:',
         '  ├── Node.js',
@@ -304,7 +613,19 @@ function initInteractiveTerminal() {
         '',
         '  → More on GitHub: github.com/typedef'
       ]
-    }
+    },
+    important: {
+      output: [
+        '┌─────────────────────────────────────────────┐',
+        '│  IMPORTANT                                  │',
+        '└─────────────────────────────────────────────┘',
+        '',
+        'The truest guide is knowledge, science. ',
+        'To seek guidance outside of knowledge ',
+        'and science is negligence, ignorance, and deviation.',
+        '— Mustafa Kemal Atatürk',
+      ]
+      },
   };
   
   cmdBtns.forEach(function(btn) {

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bitmap Converter — typedef</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/handjet-2" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">typedef@hakkionur<span class="cursor">_</span></div>
+    <nav class="top-right">
+      <a href="index.html">home</a>
+      <a href="projects.html">projects</a>
+      <a href="bitmap.html">bitmap</a>
+    </nav>
+  </header>
+
+  <main class="bitmap-page">
+    <!-- Bitmap Converter Section -->
+    <section class="bitmap-main" id="bitmapSection">
+      <div class="bitmap-container">
+        <div class="bitmap-terminal">
+          <div class="bitmap-content">
+            <h2 style="margin:0 0 12px;color:var(--fg);">Bitmap Converter</h2>
+
+            <div class="upload-section">
+              <div class="upload-area" id="uploadArea">
+                <input type="file" id="imageInput" accept="image/*">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 10l5-5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 5v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <p>Click to upload an image or drag it here</p>
+                <p class="upload-hint">Supported: PNG, JPG, GIF — will be converted to monochrome</p>
+              </div>
+              <div style="margin-top:12px">
+                <button id="chooseFileBtn" type="button" class="cmd-btn">Choose File</button>
+              </div>
+              <div id="bitmapStatus" style="margin-top:10px;color:var(--fg);opacity:0.8;font-size:13px"></div>
+            </div>
+
+            <div class="controls-section">
+              <div class="control-group">
+                <label class="control-label">Algorithm</label>
+                <select id="algorithmSelect" class="control-select">
+                  <option value="nearest">Nearest Neighbor (No Dither)</option>
+                  <option value="floyd">Floyd–Steinberg</option>
+                  <option value="atkinson">Atkinson</option>
+                  <option value="jarvis">Jarvis–Judice–Ninke</option>
+                  <option value="stucki">Stucki</option>
+                  <option value="bayer2">Bayer 2x2</option>
+                  <option value="bayer4">Bayer 4x4</option>
+                  <option value="bayer8">Bayer 8x8</option>
+                  <option value="cluster4">Clustered 4x4</option>
+                  <option value="random">Random</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label class="control-label" for="scaleInput">Scale (pixel size)</label>
+                  <span class="control-value" id="scaleValue">1</span>
+                </div>
+                <input id="scaleInput" type="range" class="control-slider" min="1" max="16" value="1">
+              </div>
+
+              <div class="control-group">
+                <div class="control-label-row">
+                  <label class="control-label" for="thresholdInput">Threshold</label>
+                  <span class="control-value" id="thresholdValue">128</span>
+                </div>
+                <input id="thresholdInput" type="range" class="control-slider" min="0" max="255" value="128">
+              </div>
+
+              <div class="control-buttons">
+                <button id="resetBtn" class="cmd-btn">Reset</button>
+                <button id="downloadBtn" class="cmd-btn">Download PNG</button>
+              </div>
+            </div>
+
+            <div class="preview-section">
+              <div class="preview-grid">
+                <div class="preview-box">
+                  <div class="preview-header">Original</div>
+                  <div class="preview-content"><canvas id="srcCanvas"></canvas></div>
+                </div>
+                <div class="preview-box">
+                  <div class="preview-header">Dithered Output</div>
+                  <div class="preview-content"><canvas id="outCanvas"></canvas></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="dither-engine.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
