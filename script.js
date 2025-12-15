@@ -357,7 +357,9 @@ function initInteractiveTerminal() {
   function scrollToBottom() {
     var outputScroll = document.querySelector('.terminal-output-scroll');
     if (outputScroll) {
-      outputScroll.scrollTop = outputScroll.scrollHeight;
+      requestAnimationFrame(function() {
+        outputScroll.scrollTop = outputScroll.scrollHeight;
+      });
     }
   }
   
