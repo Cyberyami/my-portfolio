@@ -1,58 +1,5 @@
 document.addEventListener('DOMContentLoaded', function(){
-  var closeBtn = document.getElementById('closeBtn');
-  var term = document.getElementById('terminal');
-  var fileIcon = document.getElementById('fileIcon');
-  
   initSmoothScroll();
-  
-  if(closeBtn && term && fileIcon){
-    closeBtn.addEventListener('click', function(){
-      term.classList.add('closing');
-      setTimeout(function(){
-        term.style.display = 'none';
-        fileIcon.style.display = 'flex';
-      }, 300);
-    });
-    
-    fileIcon.addEventListener('click', function(){
-      fileIcon.style.display = 'none';
-      term.style.display = 'block';
-      term.classList.remove('closing');
-    });
-  }
-
-  var newFileIcon = document.getElementById('newFileIcon');
-  var newTerminalWrap = document.getElementById('newTerminalWrap');
-  var newTerminal = document.getElementById('newTerminal');
-  var newCloseBtn = document.getElementById('newCloseBtn');
-
-  if(newFileIcon && newTerminalWrap && newTerminal && newCloseBtn){
-    newFileIcon.addEventListener('click', function(){
-      newFileIcon.classList.add('hiding');
-      setTimeout(function(){
-        newFileIcon.style.display = 'none';
-        newFileIcon.classList.remove('hiding');
-        newTerminalWrap.style.display = 'flex';
-        newTerminal.classList.add('opening');
-        setTimeout(function(){
-          newTerminal.classList.remove('opening');
-        }, 400);
-      }, 300);
-    });
-
-    newCloseBtn.addEventListener('click', function(){
-      newTerminal.classList.add('closing');
-      setTimeout(function(){
-        newTerminalWrap.style.display = 'none';
-        newTerminal.classList.remove('closing');
-        newFileIcon.style.display = 'flex';
-        newFileIcon.classList.add('showing');
-        setTimeout(function(){
-          newFileIcon.classList.remove('showing');
-        }, 400);
-      }, 300);
-    });
-  }
 
   generateAsciiPattern();
   initAsciiTrail();
@@ -195,12 +142,10 @@ function initProjectsPage(){
     }
   }
 
-  // Handle initial render
   var initial = getSlugFromHash();
   if(initial) showDetail(initial);
   else showList();
 
-  // Intercept clicks so it feels like a real app but remains shareable via hash
   app.addEventListener('click', function(e){
     var a = e.target && e.target.closest ? e.target.closest('[data-project-link]') : null;
     if(!a) return;
@@ -248,7 +193,6 @@ function generateAsciiPattern() {
   }
 }
 
-// Bitmap converter UI wiring
 function initBitmapConverter(){
   var uploadArea = document.getElementById('uploadArea');
   var imageInput = document.getElementById('imageInput');
@@ -273,7 +217,6 @@ function initBitmapConverter(){
   var img = new Image();
   var originalImage = null;
 
-  // Drag & drop
   uploadArea.addEventListener('dragover', function(e){ e.preventDefault(); uploadArea.classList.add('drag'); });
   uploadArea.addEventListener('dragleave', function(e){ e.preventDefault(); uploadArea.classList.remove('drag'); });
   uploadArea.addEventListener('drop', function(e){
@@ -296,12 +239,11 @@ function initBitmapConverter(){
   if(thresholdInput) thresholdInput.addEventListener('input', syncSliderLabels);
   syncSliderLabels();
 
-  // Choose file button inside upload area (visible, reliable user gesture)
   var chooseFileBtn = document.getElementById('chooseFileBtn');
   if(chooseFileBtn){
     chooseFileBtn.addEventListener('click', function(e){
       e.stopPropagation();
-      try{ imageInput.click(); }catch(err){ /* ignore */ }
+      try{ imageInput.click(); }catch(err){}
     });
   }
 
@@ -312,7 +254,6 @@ function initBitmapConverter(){
       img.onload = function(){
         originalImage = img;
         drawSourcePreview(img, srcCanvas);
-        // auto-apply with current settings
         scheduleApply();
         if(statusEl) statusEl.textContent = 'Loaded: ' + file.name + ' (' + originalImage.width + 'x' + originalImage.height + ')';
       };
@@ -345,7 +286,6 @@ function initBitmapConverter(){
   function applyDither(){
     if(!originalImage) return;
     var pixelSize = Math.max(1, parseInt(scaleInput.value) || 1);
-    // create small canvas reduced by pixelSize
     var smallW = Math.max(1, Math.floor(originalImage.width / pixelSize));
     var smallH = Math.max(1, Math.floor(originalImage.height / pixelSize));
     var small = document.createElement('canvas');
@@ -360,13 +300,11 @@ function initBitmapConverter(){
     var threshold = parseInt(thresholdInput.value) || 128;
     var outData = window.DitherEngine.apply(imgData, algo, {threshold:threshold});
 
-    // draw dithered small to temp canvas then scale up to outCanvas
     var temp = document.createElement('canvas');
     temp.width = smallW; temp.height = smallH;
     var tctx = temp.getContext('2d');
     tctx.putImageData(outData, 0,0);
 
-    // scale to output canvas
     var outW = smallW * pixelSize;
     var outH = smallH * pixelSize;
     outCanvas.width = outW;
@@ -377,7 +315,6 @@ function initBitmapConverter(){
     octx.drawImage(temp, 0,0, outW, outH);
   }
 
-  // Debounced auto-apply for slider drags
   var applyTimer = null;
   function scheduleApply(){
     if(!originalImage) return;
@@ -388,7 +325,6 @@ function initBitmapConverter(){
     }, 40);
   }
 
-  // Auto-apply when controls change
   algorithmSelect && algorithmSelect.addEventListener('change', function(){ scheduleApply(); });
   scaleInput && scaleInput.addEventListener('input', function(){ scheduleApply(); });
   thresholdInput && thresholdInput.addEventListener('input', function(){ scheduleApply(); });
@@ -504,8 +440,21 @@ function initInteractiveTerminal() {
   var cmdBtns = document.querySelectorAll('.cmd-btn');
   var dynamicOutput = document.getElementById('dynamicOutput');
   var cursor = document.getElementById('cursor');
+  var newTerminalWrap = document.getElementById('newTerminalWrap');
+  var newTerminal = document.getElementById('newTerminal');
+  var newCloseBtn = document.getElementById('newCloseBtn');
   
   if (!cmdBtns.length || !dynamicOutput) return;
+
+  if(newTerminalWrap && newTerminal && newCloseBtn){
+    newCloseBtn.addEventListener('click', function(){
+      newTerminal.classList.add('closing');
+      setTimeout(function(){
+        newTerminalWrap.style.display = 'none';
+        newTerminal.classList.remove('closing');
+      }, 300);
+    });
+  }
   
   function getUptime() {
     var now = new Date();
@@ -656,6 +605,14 @@ function initInteractiveTerminal() {
       
       typeOutput(outputDiv, cmdData.output, 0);
     }, 300);
+
+    if(cmd === 'important' && newTerminalWrap && newTerminal){
+      newTerminalWrap.style.display = 'flex';
+      newTerminal.classList.add('opening');
+      setTimeout(function(){
+        newTerminal.classList.remove('opening');
+      }, 400);
+    }
     
     scrollToBottom();
   }

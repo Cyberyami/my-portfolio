@@ -1,5 +1,4 @@
 (function(window){
-  // DitherEngine exposes apply(imageData, algorithm, options)
   var DitherEngine = {};
 
   function toGray(r,g,b){
@@ -23,7 +22,6 @@
   }
 
   function errorDiffuse(imgData, threshold, kernel){
-    // kernel: array of {x,y,weight}
     var w = imgData.width, h = imgData.height;
     var gray = new Float32Array(w*h);
     var inData = imgData.data;
@@ -43,7 +41,6 @@
         var oldVal = gray[idx];
         var newVal = oldVal < threshold ? 0 : 255;
         var err = oldVal - newVal;
-        // write output
         var i4 = idx*4;
         outData[i4] = outData[i4+1] = outData[i4+2] = newVal;
         outData[i4+3] = 255;
@@ -101,7 +98,6 @@
     return errorDiffuse(imgData, threshold, kernel);
   }
 
-  // Ordered dithering (Bayer matrices)
   var bayer2 = [ [0,2],[3,1] ];
   var bayer4 = [
     [0,8,2,10],
@@ -109,7 +105,6 @@
     [3,11,1,9],
     [15,7,13,5]
   ];
-  // generate 8x8 from 4x4 by formula or hardcode a standard one
   var bayer8 = [
     [0,32,8,40,2,34,10,42],
     [48,16,56,24,50,18,58,26],
@@ -137,7 +132,6 @@
       for(var x=0;x<w;x++){
         var i = (y*w + x)*4;
         var g = toGray(d[i], d[i+1], d[i+2]);
-        // matrix threshold in [0, n*n-1]
         var mval = matrix[y % n][x % n];
         var mth = (mval + 0.5) / (n*n);
         var tnorm = threshold / 255;
