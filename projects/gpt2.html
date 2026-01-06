@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portfolio Terminal — typedef</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/handjet-2" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">typedef@hakkionur<span class="cursor">_</span></div>
+    <nav class="top-right">
+      <a href="../index.html">home</a>
+      <a href="../projects.html">projects</a>
+      <a href="../bitmap.html">bitmap</a>
+    </nav>
+  </header>
+
+  <div class="ascii-pattern-bg" id="asciiPattern"></div>
+
+  <main class="projects-page">
+    <div class="pixel-art pixel-art-left"></div>
+    <div class="pixel-art pixel-art-right"></div>
+
+    <section class="projects-main">
+      <div class="projects-terminal">
+        <div class="projects-content">
+          <div class="project-card-actions" style="margin-bottom:14px;">
+            <a class="cmd-btn" href="../projects.html">← Back to projects</a>
+            <a class="cmd-btn" href="../index.html">Open page</a>
+          </div>
+
+          <article class="project-detail">
+            <header class="project-detail-header">
+              <h2 class="project-detail-title">From Generalist to Specialist: Fine-Tuning GPT-2 for Biomedical Instruction Following</h2>
+              <p class="project-detail-lead">In the rapidly evolving world of Large Language Models (LLMs), a common challenge persists: general-purpose models often struggle with domain-specific tasks. While they can chat about anything from history to cooking, they frequently "hallucinate" or lack depth when asked about niche fields like medicine or law. <br><br> In this project, I embarked on an experiment to transform a standard GPT-2 Small model into a biomedical expert capable of following specific instructions. Using a staged transfer learning pipeline, I took the model from a confused generalist to a domain-aware assistant.</p>
+            </header>
+
+            <div class="project-sections">
+              <p class="project-detail-text">Here is the step-by-step journey of how I built this biomedical specialist. <br> <br></p>
+
+              <h3 class="project-block-title">The Objective</h3>
+              <p class="project-detail-text">The goal was to demonstrate staged transfer learning. Instead of training a model from scratch (which requires massive compute), I fine-tuned a pre-trained model through distinct phases to inject domain knowledge (biomedical) and behavioral patterns (instruction following).</p>
+
+              <br><h3 class="project-block-title">Phase 1: Establishing a Baseline</h3>
+              <p class="project-detail-text">Before training, I needed to quantify how "ignorant" the base GPT-2 model was regarding biomedical texts. I evaluated the pre-trained weights on a domain-specific corpus derived from PubMed abstracts. <br><br>
+              <strong>Metric:</strong> Perplexity (PPL) — a measure of how "surprised" the model is by new text.<br>
+              <strong>Result:</strong> The baseline model achieved a <strong>Perplexity of 31.86</strong>.<br>
+              <strong>Qualitative Analysis:</strong> When prompted with technical sentences, the model produced fluent but scientifically nonsensical text. It lacked the deep understanding required for the field.</p>
+
+              <br><h3 class="project-block-title">Phase 2: Domain Adaptation</h3>
+              <p class="project-detail-text">To turn the model into a "specialist," I performed <strong>Causal Language Modeling (CLM)</strong> on the biomedical corpus. This phase essentially sent the model to "medical school." I used the Hugging Face Trainer API with mixed-precision training (fp16) to optimize GPU memory usage.</p>
+
+              <br><pre class="code-block"><code># Training arguments for Domain Adaptation
+training_args = TrainingArguments(
+    output_dir="./gpt2trained",
+    num_train_epochs=3,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=4, # Simulating larger batch sizes
+    fp16=True,                     # Mixed precision for GPU memory efficiency
+    logging_steps=50,
+    save_total_limit=2
+)</code></pre><br>
+
+              <p class="project-detail-text"><strong>Results:</strong> The training loss curve showed a steady decrease, indicating successful learning of domain patterns. Most importantly, the <strong>Perplexity dropped significantly to 16.80</strong> (down from 31.86), proving the model was now much more comfortable with medical terminology.</p>
+
+              <figure class="project-media">
+                <img class="project-img" src="../img/loss.png" alt="Training Loss vs Steps Graph showing decrease">
+                <figcaption>Fig 1. Training Loss vs Steps (Phase 2)</figcaption>
+              </figure>
+
+              <br><h3 class="project-block-title">Phase 3: The Discriminator</h3>
+              <p class="project-detail-text">A robust AI system needs to distinguish between relevant and irrelevant information. In Phase 3, I repurposed the domain-adapted model as a <strong>binary classifier</strong>. <br><br>To train this, I needed a balanced dataset. I used biomedical abstracts as positive samples and generated <strong>synthetic negative samples</strong> (general daily life sentences) to force the model to learn the difference.</p>
+
+              <br><pre class="code-block"><code># Generating random general-domain sentences 
+# to contrast with biomedical abstracts
+neg_set = set()
+while len(neg_set) < 250:
+    s = f"{random.choice(subjects)} {random.choice(verbs)} to {random.choice(places)}..."
+    neg_set.add(s)</code></pre> <br>
+
+              <p class="project-detail-text"><strong>Result:</strong> After fine-tuning the classification head, the model achieved <strong>100% accuracy</strong> on the test set. This confirmed that the model had learned distinct linguistic features separating biomedical text from general content.</p>
+
+              <br><h3 class="project-block-title">Phase 4: Instruction Fine-Tuning</h3>
+              <p class="project-detail-text">The final and most critical phase was teaching the model to act as an assistant. Mere knowledge isn't enough; the model needed to understand how to respond to questions. I curated a dataset of <strong>50 instruction-response pairs</strong> and formatted them into a structured prompt. This format explicitly teaches the model where the user's query ends and where its response should begin.</p>
+
+              <br><pre class="code-block"><code>def format_example(ex):
+    """
+    Formats the input to train the model on instruction following.
+    """
+    return (
+        "### Instruction:\n"
+        + ex["instruction"].strip()
+        + "\n### Response:\n"
+        + ex["response"].strip()
+        + tokenizer.eos_token
+    )</code></pre>
+
+            <br>  <h3 class="project-block-title">Final Results: The Transformation</h3>
+              <p class="project-detail-text">The difference between the base model and the final instruction-tuned model is night and day.</p>
+              
+              <div style="border: 1px solid var(--term-dim); padding: 15px; margin-bottom: 20px;">
+                  <strong style="color: var(--term-green);">1. Before Training (Phase 1)</strong><br>
+                  <span style="opacity: 0.8;">Prompt: "We performed Cox proportional hazards regression..."</span><br>
+                  <span style="opacity: 0.8;">Model Output: "...to estimate the hazard ratio (HR) for selected subgroups... The HR for the lowest group is 3.08..."</span><br>
+                  <em>Analysis: The model hallucinates statistics and continues the sentence blindly.</em>
+                  <br><br>
+                  <strong style="color: var(--term-green);">2. After Instruction Tuning (Phase 4)</strong><br>
+                  <span style="opacity: 0.8;">Prompt: "What is Cox proportional hazards regression?"</span><br>
+                  <span style="opacity: 0.8;">Model Output: "Cox proportional hazard regression measures the influence of a given outcome on the likelihood that it will occur..."</span><br>
+                  <em>Analysis: The model now acts as an intelligent assistant, providing a correct and relevant definition.</em>
+              </div>
+
+             <br> <h3 class="project-block-title">Conclusion</h3>
+              <p class="project-detail-text">This project demonstrates the power of Transfer Learning and Instruction Tuning. By taking a small, general-purpose model (GPT-2) and guiding it through specific training phases, we can build specialized tools for complex domains like healthcare, all with limited computational resources.</p>
+              
+              <p class="project-detail-text" style="margin-top: 20px;">
+                  <a href="#" style="color: var(--term-green); text-decoration: underline;">View Source Code on GitHub</a>
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>
