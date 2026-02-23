@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project — Smurf Detection (CS2) | typedef</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/handjet-2" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">typedef@hakkionur<span class="cursor">_</span></div>
+    <nav class="top-right">
+      <a href="../index.html">home</a>
+      <a href="../projects.html">projects</a>
+      <a href="../bitmap.html">bitmap</a>
+        <a href="../smurf.html">smurf detection</a>
+    </nav>
+  </header>
+
+  <div class="ascii-pattern-bg" id="asciiPattern"></div>
+
+  <main class="projects-page">
+    <div class="pixel-art pixel-art-left"></div>
+    <div class="pixel-art pixel-art-right"></div>
+
+    <section class="projects-main">
+      <div class="projects-terminal">
+        <div class="projects-content">
+
+          <div class="project-card-actions" style="margin-bottom:14px;">
+            <a class="cmd-btn" href="../projects.html">← Back to projects</a>
+            <a class="cmd-btn" href="../index.html">Open page</a>
+          </div>
+
+          <article class="project-detail">
+            <header class="project-detail-header">
+              <h2 class="project-detail-title">CS2 Smurf Detection (Faceit): Explainable Smurf Score</h2>
+              <p class="project-detail-lead">
+                Smurfing is when a strong player jumps on a new account and farms lower lobbies.
+                This project pulls Faceit CS2 stats and recent matches, then outputs a simple <strong>Smurf Score (0–100)</strong>
+                with the receipts: per-metric bars and plain-English flags.
+                It’s a lightweight API + a terminal-style dashboard.
+              </p>
+            </header>
+
+            <div class="project-sections">
+              <h3 class="project-block-title">Goal</h3>
+              <p class="project-detail-text">
+                Build a fast, explainable signal (not a magic “AI” label) that helps spot suspicious accounts using real match data.
+              </p>
+              <ul class="project-detail-text" style="margin-top:8px;">
+                <li>Fetch player + match data from Faceit</li>
+                <li>Derive a few human-readable signals</li>
+                <li>Combine them into a stable 0–100 score</li>
+                <li>Explain the score with flags</li>
+              </ul>
+
+              <br>
+
+              <h3 class="project-block-title">Architecture</h3>
+              <div style="border: 1px solid var(--term-dim); padding: 14px; margin-top: 10px; margin-bottom: 18px;">
+                <strong style="color: var(--term-green);">API (Cloudflare Worker)</strong><br>
+                <span style="opacity:0.85;">Nickname → player_id, fetch stats + recent matches, compute features, return JSON.</span><br><br>
+                <strong style="color: var(--term-green);">Frontend (Terminal Dashboard)</strong><br>
+                <span style="opacity:0.85;">Calls the API and renders score, metrics, flags, and a recent matches table.</span>
+              </div>
+
+              <h3 class="project-block-title">Pipeline</h3>
+              <pre class="code-block"><code>GET /api/analyze?player=&lt;nickname&gt;
+
+1) resolve player id
+2) fetch lifetime stats (CS2)
+3) fetch recent matches (last ~20)
+4) fetch per-match stats (subset for features)
+5) compute signals → score + flags
+6) return JSON</code></pre>
+
+              <br>
+
+              <h3 class="project-block-title">Signals</h3>
+              <p class="project-detail-text">
+                v1 is intentionally boring: a weighted sum of interpretable signals. Boring is good. You can debug boring.
+              </p>
+              <div style="border: 1px solid var(--term-dim); padding: 14px; margin-top: 10px;">
+                <span style="opacity:0.9;">
+                  • <strong>Low match count</strong>: fresh account suspicion<br>
+                  • <strong>K/D</strong> and <strong>win rate</strong>: dominance signals<br>
+                  • <strong>Headshot %</strong>: mechanical skill signal<br>
+                  • <strong>Win streak</strong>: short-term domination<br>
+                  • <strong>Recent spike</strong>: recent performance above lifetime baseline
+                </span>
+              </div>
+
+              <br>
+
+              <h3 class="project-block-title">Scoring (Heuristics v1)</h3>
+              <p class="project-detail-text">
+                Each rule adds points. The total is clamped to 0–100. Nothing hidden, nothing mystical.
+              </p>
+              <pre class="code-block"><code>// sketch
+score = 10
+
+if matches_played &lt; 50: score += 25
+if kd &gt;= 1.30:          score += 30
+if win_rate &gt;= 60:      score += 20
+if headshot_pct &gt;= 55:  score += 15
+
+if winstreak &gt;= 5:      score += 15
+if recent_kd - lifetime_kd &gt;= 0.30: score += 20
+
+score = clamp(score, 0, 100)</code></pre>
+
+              <br>
+
+              <h3 class="project-block-title">Output</h3>
+              <p class="project-detail-text">
+                The API returns UI-ready JSON: headline score, raw stats, normalized metric bars, and flags that explain the result.
+              </p>
+              <pre class="code-block"><code>{
+  "smurf_score": 72,
+  "win_rate": 61.4,
+  "kd_ratio": 1.42,
+  "matches_played": 38,
+  "metrics": { "headshot": {"raw":"58%","norm":85} },
+  "flags": [
+    {"level":"high","title":"Low Match Count","description":"Fresh account + strong stats."}
+  ]
+}</code></pre>
+
+              <br>
+
+              <h3 class="project-block-title">How to Read a High Score</h3>
+              <div style="border: 1px solid var(--term-dim); padding: 15px; margin-bottom: 20px;">
+                <strong style="color: var(--term-green);">Example</strong><br>
+                <span style="opacity: 0.85;">• Matches: 38</span><br>
+                <span style="opacity: 0.85;">• Lifetime K/D: 1.42</span><br>
+                <span style="opacity: 0.85;">• Recent K/D spike</span><br>
+                <span style="opacity: 0.85;">• Win streak: 6</span><br><br>
+                <em>Interpretation: small sample + consistent dominance + spike = suspicious.</em>
+              </div>
+
+              <h3 class="project-block-title">Validation</h3>
+              <ul class="project-detail-text" style="margin-top:8px;">
+                <li>Sanity: legit high-level accounts shouldn’t always score high</li>
+                <li>Edge cases: low matches but average stats should stay moderate</li>
+                <li>Stability: score shouldn’t swing wildly between runs</li>
+                <li>Explainability: flags should match what a human would point at</li>
+              </ul>
+
+              <br>
+
+              <h3 class="project-block-title">Visuals</h3>
+              <p class="project-detail-text">
+                Since v1 is rules, visuals are about insight: score distribution, feature contributions, and recent vs lifetime comparisons.
+              </p>
+
+              <figure class="project-media">
+                <img class="project-img" src="../img/smurf_score_dist.png" alt="Smurf score distribution placeholder">
+                <figcaption>Fig 1. Smurf Score distribution (placeholder)</figcaption>
+              </figure>
+
+              <figure class="project-media">
+                <img class="project-img" src="../img/recent_vs_lifetime.png" alt="Recent vs lifetime metrics placeholder">
+                <figcaption>Fig 2. Recent vs Lifetime comparison (placeholder)</figcaption>
+              </figure>
+
+              <br>
+
+              <h3 class="project-block-title">Next</h3>
+              <ul class="project-detail-text" style="margin-top:8px;">
+                <li>Collect labels (manual review or proxy labels)</li>
+                <li>Train a lightweight model (logistic regression / GBDT)</li>
+                <li>Calibrate probabilities</li>
+                <li>Add SHAP-style explanations</li>
+                <li>Harden the API (rate limits + caching)</li>
+              </ul>
+
+              <br>
+
+              <h3 class="project-block-title">Wrap-up</h3>
+              <p class="project-detail-text">
+                This is a practical baseline: fast, cheap, explainable. If it’s wrong, it’s wrong in a way you can actually fix.
+              </p>
+
+              <p class="project-detail-text" style="margin-top: 20px;">
+                <a href="#" style="color: var(--term-green); text-decoration: underline;">View Source on GitHub</a>
+                <span style="opacity:0.6;">(replace # with your repo link)</span>
+              </p>
+
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

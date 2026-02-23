@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>typedef — FaceIt Smurf Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/handjet-2" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="smurf.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="top-left">typedef@hakkionur<span class="cursor">_</span></div>
+    <nav class="top-right">
+      <a href="index.html">home</a>
+      <a href="projects.html">projects</a>
+      <a href="bitmap.html">bitmap</a>
+        <a href="smurf.html">smurf detection</a>
+    </nav>
+  </header>
+
+  <div class="ascii-pattern-bg" id="asciiPattern"></div>
+
+  <main class="smurf-page">
+    <div class="pixel-art pixel-art-left"></div>
+    <div class="pixel-art pixel-art-right"></div>
+
+    <div class="smurf-container">
+      <!-- Input Panel -->
+      <section class="smurf-section" id="inputSection">
+        <div class="smurf-section-title">Analyze Player</div>
+        <div class="input-panel">
+          <input 
+            type="text" 
+            id="playerInput" 
+            placeholder="Enter FaceIt Player ID or Username"
+            autocomplete="off"
+          >
+          <button class="analyze-btn" id="analyzeBtn">Analyze</button>
+        </div>
+      </section>
+
+      <div class="smurf-main">
+        <!-- Loading State -->
+        <section class="smurf-section" id="loadingSection" style="display: none;">
+          <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Fetching player data...</div>
+            <div class="loading-text" style="font-size: 12px; opacity: 0.5;">Analyzing statistics</div>
+          </div>
+        </section>
+
+        <!-- Result Dashboard -->
+        <div id="resultDashboard" class="result-dashboard">
+          <div class="back-button-container">
+            <button class="back-btn" id="backBtn">← Back to Input</button>
+          </div>
+          <!-- Dashboard Header Stats -->
+          <section class="smurf-section">
+            <div class="smurf-section-title">Result Dashboard</div>
+            <div class="dashboard-header">
+              <div class="stat-box">
+                <div class="stat-label">Suspicion Score</div>
+                <div class="stat-value" id="suspicionScore">0%</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Win Rate</div>
+                <div class="stat-value" id="winRate">0%</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">K/D Ratio</div>
+                <div class="stat-value" id="kdRatio">0.00</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Matches Played</div>
+                <div class="stat-value" id="matchesPlayed">0</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Advanced Metrics -->
+          <section class="smurf-section advanced-metrics">
+            <div class="smurf-section-title">Advanced Metrics (8-Point Analysis)</div>
+            <div class="metrics-grid">
+              <div class="metric-item">
+                <div class="metric-name">Account Age</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricAge" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreAge">0 days</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Rank Consistency</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricConsistency" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreConsistency">0%</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Headshot Percentage</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricHeadshot" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreHeadshot">0%</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Win Streak</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricWinStreak" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreWinStreak">0</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Unusual Improvement</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricImprovement" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreImprovement">0%</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Play Time Anomaly</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricPlaytime" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scorePlaytime">0%</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Region Consistency</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricRegion" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreRegion">0%</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-name">Behavior Anomaly</div>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="metricBehavior" style="width: 0%"></div>
+                </div>
+                <div class="metric-score" id="scoreBehavior">0%</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Flags / Suspicion Reasons -->
+          <section class="smurf-section flags-section">
+            <div class="smurf-section-title">Flags & Suspicion Reasons</div>
+            <div class="flags-list" id="flagsList">
+              <div class="empty-state">
+                <div class="empty-state-icon">∅</div>
+                <div class="empty-state-text">No suspicion flags detected</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Match Table -->
+          <section class="smurf-section">
+            <div class="smurf-section-title">Recent Matches (Last 10)</div>
+            <div class="match-table-wrapper">
+              <table class="match-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Result</th>
+                    <th>Map</th>
+                    <th>Kills</th>
+                    <th>Deaths</th>
+                    <th>Assists</th>
+                    <th>K/D</th>
+                    <th>Headshots %</th>
+                    <th>Duration</th>
+                  </tr>
+                </thead>
+                <tbody id="matchesTableBody">
+                  <tr>
+                    <td colspan="9" class="empty-state">
+                      <div style="padding: 20px 0;">
+                        <div style="font-size: 14px; opacity: 0.6;">No matches to display</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" style="display: block;">
+          <section class="smurf-section">
+            <div class="empty-state">
+              <div class="empty-state-icon">→</div>
+              <div class="empty-state-text">Enter a FaceIt player ID to begin analysis</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorSection" class="error-section">
+          <section class="smurf-section">
+            <div class="error-state">
+              <div class="error-icon">⚠</div>
+              <div class="error-text" id="errorText">An error occurred</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script defer src="smurf.js"></script>
+</body>
+</html>

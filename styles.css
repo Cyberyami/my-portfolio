@@ -166,11 +166,17 @@ main{
 }
 
 main.bitmap-page,
-main.projects-page{
+main.projects-page,
+main.smurf-page{
   height:auto;
   min-height:100vh;
   justify-content:flex-start;
   padding:0 20px;
+}
+
+main.smurf-page{
+  padding-top:100px;
+  padding-bottom:60px;
 }
 
 main.projects-page .projects-terminal,
