@@ -439,22 +439,8 @@ function smoothScrollTo(target, duration) {
 function initInteractiveTerminal() {
   var cmdBtns = document.querySelectorAll('.cmd-btn');
   var dynamicOutput = document.getElementById('dynamicOutput');
-  var cursor = document.getElementById('cursor');
-  var newTerminalWrap = document.getElementById('newTerminalWrap');
-  var newTerminal = document.getElementById('newTerminal');
-  var newCloseBtn = document.getElementById('newCloseBtn');
-  
-  if (!cmdBtns.length || !dynamicOutput) return;
 
-  if(newTerminalWrap && newTerminal && newCloseBtn){
-    newCloseBtn.addEventListener('click', function(){
-      newTerminal.classList.add('closing');
-      setTimeout(function(){
-        newTerminalWrap.style.display = 'none';
-        newTerminal.classList.remove('closing');
-      }, 300);
-    });
-  }
+  if (!cmdBtns.length || !dynamicOutput) return;
   
   function getUptime() {
     var now = new Date();
@@ -471,6 +457,15 @@ function initInteractiveTerminal() {
     return new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  function getBrowserName() {
+    var ua = navigator.userAgent;
+    if (ua.indexOf('Firefox') > -1) return 'Firefox';
+    if (ua.indexOf('Edg') > -1) return 'Edge';
+    if (ua.indexOf('Chrome') > -1) return 'Chrome';
+    if (ua.indexOf('Safari') > -1) return 'Safari';
+    return 'Unknown';
+  }
+
   var commands = {
     neofetch: {
       output: [
@@ -478,13 +473,13 @@ function initInteractiveTerminal() {
         '    ████████╗██╗   ██╗██████╗ ███████╗          typedef@portfolio',
         '    ╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝          -----------------',
         '       ██║    ╚████╔╝ ██████╔╝█████╗            OS: PortfolioOS 1.0',
-        '       ██║     ╚██╔╝  ██╔═══╝ ██╔══╝            Host: ' + navigator.platform,
+        '       ██║     ╚██╔╝  ██╔═══╝ ██╔══╝            Host: ' + (navigator.userAgentData && navigator.userAgentData.platform ? navigator.userAgentData.platform : (navigator.platform || 'unknown')),
         '       ██║      ██║   ██║     ███████╗          Uptime: ' + getUptime(),
         '       ╚═╝      ╚═╝   ╚═╝     ╚══════╝          Shell: terminal.js',
         '                                                Resolution: ' + window.innerWidth + 'x' + window.innerHeight,
         '    ██████╗ ███████╗███████╗                    Theme: Cyberpunk Dark',
         '    ██╔══██╗██╔════╝██╔════╝                    Font: Handjet Mono',
-        '    ██║  ██║█████╗  █████╗                      Browser: ' + navigator.userAgent.split(' ').pop(),
+        '    ██║  ██║█████╗  █████╗                      Browser: ' + getBrowserName(),
         '    ██║  ██║██╔══╝  ██╔══╝                      Time: ' + getCurrentTime(),
         '    ██████╔╝███████╗██║                         Date: ' + getDate(),
         '    ╚═════╝ ╚══════╝╚═╝                         ',
@@ -499,7 +494,7 @@ function initInteractiveTerminal() {
         '│  ABOUT ME                                   │',
         '└─────────────────────────────────────────────┘',
         '',
-        'Hello! I\'m Hakkı Onur Hürmüzlü, 22 years old Software Engineer Student from Turkiye.',
+        'Hello! I\'m Hakkı Onur Hürmüzlü, 23 years old Software Engineer Student from Turkiye.',
         '',
         '',
         'I love coding and creating projects that make a difference. My interests include web development,',
@@ -551,16 +546,9 @@ function initInteractiveTerminal() {
         '│  PROJECTS                                   │',
         '└─────────────────────────────────────────────┘',
         '',
-        '  [01] Portfolio Terminal',
-        '  └── This very website! Pure HTML/CSS/JS',
+
         '',
-        '  [02] Project Alpha',
-        '  └── A cool thing I\'m working on',
-        '',
-        '  [03] Secret Project',
-        '  └── Coming soon... 👀',
-        '',
-        '  → More on GitHub: github.com/typedef'
+        '  → Projects on GitHub: github.com/typedef and typedefs.space/projects.html'
       ]
     },
     important: {
@@ -606,14 +594,6 @@ function initInteractiveTerminal() {
       typeOutput(outputDiv, cmdData.output, 0);
     }, 300);
 
-    if(cmd === 'important' && newTerminalWrap && newTerminal){
-      newTerminalWrap.style.display = 'flex';
-      newTerminal.classList.add('opening');
-      setTimeout(function(){
-        newTerminal.classList.remove('opening');
-      }, 400);
-    }
-    
     scrollToBottom();
   }
   
@@ -641,9 +621,4 @@ function initInteractiveTerminal() {
     }
   }
   
-  setInterval(function() {
-    if (cursor) {
-      cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
-    }
-  }, 500);
 }
